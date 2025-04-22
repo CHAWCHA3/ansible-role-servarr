@@ -1,4 +1,4 @@
-ansible-servarr
+tinyoverflow.servarr
 =========
 
 This Ansible role automates the installation, configuration, and management of Servarr applications (e.g., Radarr, Sonarr) on Linux systems. It handles tasks such as downloading the application, setting up systemd services, creating necessary directories, and configuring the application. It supports automatic upgrades on version changes and prevents downgrades, as those might lead to an unstable or broken state.
