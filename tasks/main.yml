@@ -1,0 +1,14 @@
+---
+- name: Do preparation work
+  ansible.builtin.include_tasks:
+    file: preparation/main.yml
+    apply:
+      tags: [always, preparation]
+  tags: [always, preparation]
+
+- name: Install and configure servarr applications
+  ansible.builtin.include_tasks:
+    file: servarr/main.yml
+    apply:
+      tags: [servarr]
+  tags: [servarr]

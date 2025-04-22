@@ -1,0 +1,7 @@
+---
+- name: Restart servarr
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ _instance_service_name }}"
+    state: restarted
+    daemon_reload: true

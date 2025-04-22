@@ -1,0 +1,5 @@
+---
+- name: Install python3-lxml package for servarr configuration
+  ansible.builtin.apt:
+    name: "python3-lxml"
+    state: present

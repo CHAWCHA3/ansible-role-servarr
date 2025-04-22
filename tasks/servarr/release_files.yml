@@ -1,0 +1,58 @@
+---
+- name: Stop current servarr service on upgrade
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ _instance_service_name }}"
+    state: stopped
+  when: _servarr_installation_stategy_upgrade
+
+- name: Remove current servarr app directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ _release_install_dir }}"
+    state: absent
+
+- name: Create servarr app directory and set permissions
+  become: true
+  ansible.builtin.file:
+    path: "{{ _release_install_dir }}"
+    state: directory
+    owner: "{{ servarr_user }}"
+    group: "{{ servarr_group }}"
+    mode: "0750"
+
+- name: Create servarr data directory and set permissions
+  become: true
+  ansible.builtin.file:
+    path: "{{ _release_install_dir }}"
+    state: directory
+    owner: "{{ servarr_user }}"
+    group: "{{ servarr_group }}"
+    mode: "0750"
+
+- name: Download and unpack servarr application
+  become: true
+  ansible.builtin.unarchive:
+    src: "{{ _release_download_uri }}"
+    dest: "{{ _release_install_dir }}"
+    remote_src: true
+    extra_opts:
+      - "--strip-components=1"
+  register: _download_and_unarchive_result
+  until:
+    - "not 'urlopen error' in _download_and_unarchive_result.msg | default('')"
+    - "not 'The read operation timed out' in _download_and_unarchive_result.msg | default('')"
+  retries: 3
+  delay: 60
+
+- name: Set file and directory permissions
+  become: true
+  ansible.builtin.command:
+    cmd: "{{ item }}"
+  with_items:
+    - chown -R {{ servarr_user }}:{{ servarr_group }} {{ _release_install_dir }}
+    - find {{ _release_install_dir }} -type d -exec chmod o-rwx {} ;
+    - find {{ _release_install_dir }} -type f -exec chmod o-rwx {} ;
+  register: _set_install_permissions
+  changed_when:
+    - 'not _set_install_permissions.stdout == ""'

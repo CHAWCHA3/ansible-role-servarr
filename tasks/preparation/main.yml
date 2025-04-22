@@ -1,0 +1,28 @@
+---
+- name: Check variables for logical errors
+  ansible.builtin.include_tasks:
+    file: vars.yml
+    apply:
+      tags: vars
+  tags: vars
+
+- name: Set facts about the underlying platform
+  ansible.builtin.include_tasks:
+    file: platform.yml
+    apply:
+      tags: platform
+  tags: platform
+
+- name: Set facts about the servarr application release
+  ansible.builtin.include_tasks:
+    file: release.yml
+    apply:
+      tags: servarr_release
+  tags: servarr_release
+
+- name: Install dependencies for this playbook
+  ansible.builtin.include_tasks:
+    file: dependencies.yml
+    apply:
+      tags: dependencies
+  tags: dependencies

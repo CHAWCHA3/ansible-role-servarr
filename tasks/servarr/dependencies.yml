@@ -1,0 +1,6 @@
+---
+- name: Install system dependencies required for this app
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    pkg: "{{ servarr_app_configurations[servarr_app].dependencies }}"

@@ -1,0 +1,32 @@
+---
+- name: Verify operating system is Debian
+  ansible.builtin.assert:
+    that: ansible_distribution == "Debian"
+    msg: "Sorry, this role is only supported on Debian-based systems."
+    success_msg: "Found distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Verify the systems architecture
+  block:
+    - name: Identify system architecture
+      ansible.builtin.set_fact:
+        _release_architecture: >-
+          {{ (
+            'x64' if ansible_architecture in ['x86_64'] else
+            'x86' if ansible_architecture in ['i386', 'i686'] else
+            'arm' if ansible_architecture in ['armv7l', 'armv6l'] else
+            'arm64' if ansible_architecture in ['aarch64', 'arm64'] else
+            ansible_architecture
+          ) | trim }}
+
+    - name: Ensure the architecture is supported
+      ansible.builtin.assert:
+        that: _release_architecture in ['x64', 'x86', 'arm', 'arm64']
+        msg:
+          - "The architecture {{ _release_architecture }} is not supported."
+          - "Supported architectures are: x64, x86, arm, arm64"
+
+- name: Verify system is using systemd
+  ansible.builtin.assert:
+    that: ansible_service_mgr == "systemd"
+    msg: "Sorry, this role is only supported on systems using systemd."
+    success_msg: "Found systemd version: {{ ansible_systemd.version }}"

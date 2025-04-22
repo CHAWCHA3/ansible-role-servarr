@@ -1,0 +1,31 @@
+---
+- name: Ensure the given app is supported
+  ansible.builtin.assert:
+    that:
+      - servarr_app in servarr_supported_apps
+    msg:
+      - "The app {{ servarr_app }} is not supported."
+      - "Supported apps are: {{ servarr_supported_apps | join(', ') }}"
+
+- name: Ensure compatibility with Sonarr
+  ansible.builtin.assert:
+    that: >-
+      servarr_app != "sonarr" or (servarr_version | default('4')) is ansible.builtin.version('4.0.0.0', '<', version_type='loose')
+    msg:
+      - "The app {{ servarr_app }} is not compatible with the current version."
+      - "Please use the correct version for Sonarr."
+
+- name: Ensure the data directory is not inside the installation directory
+  ansible.builtin.assert:
+    that:
+      - not servarr_data_dir in servarr_install_dir
+    msg:
+      - "Do not put the data directory inside the installation directory."
+      - "This is a bad idea and will cause issues, as the installation directory has to be cleaned on upgrading."
+
+- name: Ensure the installation directory is not inside root
+  ansible.builtin.assert:
+    that:
+      - not servarr_install_dir in "/"
+    msg:
+      - "Do not put the installation directory inside root."

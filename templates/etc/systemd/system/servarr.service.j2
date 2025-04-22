@@ -1,0 +1,16 @@
+[Unit]
+Description={{ servarr_app | capitalize}} ({{ servarr_instance_name }})
+After=syslog.target network.target
+
+[Service]
+User={{ servarr_user }}
+Group={{ servarr_group }}
+UMask=0002
+Type=simple
+ExecStart={{ _release_install_dir }}/{{ servarr_app | capitalize }} -nobrowser -data={{ _instance_data_dir }}
+TimeoutStopSec=20
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,56 @@
+---
+- name: Create system user and group
+  ansible.builtin.include_tasks:
+    file: system_user.yml
+    apply:
+      tags: system_user
+  tags: system_user
+
+- name: Get servarr release files
+  when: >-
+    _servarr_installation_stategy_fresh or
+    _servarr_installation_stategy_upgrade
+  ansible.builtin.include_tasks:
+    file: release_files.yml
+    apply:
+      tags: release_files
+  tags: release_files
+
+- name: Configure dependencies
+  when: >-
+    _servarr_installation_stategy_fresh or
+    _servarr_installation_stategy_upgrade
+  ansible.builtin.include_tasks:
+    file: dependencies.yml
+    apply:
+      tags: dependencies
+  tags: dependencies
+
+- name: Adjust servarr configuration
+  when: >-
+    _servarr_installation_stategy_fresh or
+    _servarr_installation_stategy_upgrade or
+    _servarr_installation_stategy_reconfigure
+  ansible.builtin.include_tasks:
+    file: configuration.yml
+    apply:
+      tags: configuration
+  tags: configuration
+
+- name: Deploy and activate systemd service
+  when: >-
+    _servarr_installation_stategy_fresh or
+    _servarr_installation_stategy_upgrade or
+    _servarr_installation_stategy_reconfigure
+  ansible.builtin.include_tasks:
+    file: systemd_service.yml
+    apply:
+      tags: systemd_service
+  tags: systemd_service
+
+- name: Finalize installation
+  ansible.builtin.include_tasks:
+    file: finalize.yml
+    apply:
+      tags: finalize
+  tags: finalize

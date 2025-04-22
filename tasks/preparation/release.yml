@@ -1,0 +1,112 @@
+---
+- name: Set and check download URL
+  block:
+    - name: Set download URL
+      ansible.builtin.set_fact:
+        _release_download_uri: >-
+          {{
+            servarr_app_configurations[servarr_app].url
+            | replace('$branch', servarr_branch | default(servarr_app_configurations[servarr_app].branch))
+            | replace('$version', servarr_version | default('4' if servarr_app == 'sonarr' else ''))
+            | replace('$arch', _release_architecture)
+          }}
+
+    - name: Check download URL is valid
+      ansible.builtin.uri:
+        url: "{{ _release_download_uri }}"
+        method: GET
+        status_code: [200, 302]
+        return_content: false
+      register: _release_download_uri_response
+      until: _release_download_uri_response.status in [200, 302]
+      retries: 5
+
+    - name: Fail if no valid version was retrieved
+      ansible.builtin.fail:
+        msg: >-
+          No valid version was retrieved from the server.
+          {{ 'Please check your provided servarr_version variable if the version actually exists.' if servarr_version is defined }}"
+      when: _release_download_uri_response['content_disposition'] is not defined and _release_download_uri_response['url'] is not defined
+      register: _exception
+
+    - name: Set version retrieved from server
+      ansible.builtin.set_fact:
+        _servarr_version: >-
+          {{ (
+            _release_download_uri_response['content_disposition' if _release_download_uri_response['content_disposition'] is defined else 'url']
+            | regex_search('(\d[\\.\d]+\d)', '\1')
+          )[0] }}
+
+- name: Set installation and instance variables
+  ansible.builtin.set_fact:
+    _release_install_dir: "{{ servarr_install_dir | default('/opt') }}/{{ servarr_app }}"
+    _instance_data_dir: "{{ servarr_data_dir | default('/var/lib') }}/{{ servarr_app }}/{{ servarr_instance_name }}"
+    _instance_service_name: "{{ servarr_app }}-{{ servarr_instance_name }}"
+
+- name: Check for existing installation
+  become: true
+  ansible.builtin.stat:
+    path: "{{ _release_install_dir }}/.version"
+  register: _servarr_version_file_object
+
+- name: Set current installed version variable
+  when: _servarr_version_file_object.stat.exists
+  block:
+    - name: Get current installed version
+      ansible.builtin.slurp:
+        src: "{{ _release_install_dir }}/.version"
+      register: _servarr_version_installed_object
+      changed_when: (_servarr_version_installed_object['content'] | b64decode) != _servarr_version | string
+
+    - name: Decode current installed version
+      ansible.builtin.set_fact:
+        _servarr_installed_version: "{{ _servarr_version_installed_object['content'] | b64decode }}"
+
+- name: Unset current installed version variable if no .version file exists
+  when: not _servarr_version_file_object.stat.exists
+  ansible.builtin.set_fact:
+    _servarr_installed_version: "0"
+
+- name: Set installation strategy
+  ansible.builtin.set_fact:
+    _servarr_installation_stategy_fresh: >-
+      {{ 'true' if not _servarr_installed_version is defined or _servarr_installed_version == "0" else 'false' }}
+    _servarr_installation_stategy_upgrade: >-
+      {{ 'true' if (_servarr_installed_version is defined
+        and _servarr_installed_version != "0")
+        and _servarr_installed_version is ansible.builtin.version(_servarr_version, '<', version_type='loose') else 'false' }}
+    _servarr_installation_stategy_reconfigure: >-
+      {{ 'true' if (_servarr_installed_version is defined
+        and _servarr_installed_version != "0")
+        and _servarr_installed_version is ansible.builtin.version(_servarr_version, '==', version_type='loose') else 'false' }}
+    _servarr_installation_stategy_downgrade: >-
+      {{ 'true' if (_servarr_installed_version is defined
+        and _servarr_installed_version != "0")
+        and _servarr_installed_version is ansible.builtin.version(_servarr_version, '>', version_type='loose') else 'false' }}
+
+- name: Print detected installation state
+  ansible.builtin.debug:
+    msg:
+      - >-
+        "{{ servarr_app | capitalize }} installed version: {{ _servarr_installed_version if _servarr_installed_version is defined
+        and _servarr_installed_version != '0' else '-' }}"
+      - "{{ servarr_app | capitalize }} target version:    {{ _servarr_version }}"
+      - "{{ servarr_app | capitalize }} target branch:     {{ servarr_branch | default(servarr_app_configurations[servarr_app].branch) }}"
+      - "{{ servarr_app | capitalize }} download URI:      {{ _release_download_uri }}"
+      - "----------------------------"
+      - "Installation directory:    {{ _release_install_dir }}"
+      - "Installation version file: {{ _release_install_dir }}/.version"
+      - "Instance data directory:   {{ _instance_data_dir }}"
+      - "Instance service name:     {{ _instance_service_name }}"
+      - "----------------------------"
+      - "Detected strategy:"
+      - "  Fresh:       {{ _servarr_installation_stategy_fresh }}"
+      - "  Upgrade:     {{ _servarr_installation_stategy_upgrade }}"
+      - "  Reconfigure: {{ _servarr_installation_stategy_reconfigure }}"
+      - "  Downgrade:   {{ _servarr_installation_stategy_downgrade }}"
+
+- name: Fail if downgrade is detected
+  ansible.builtin.fail:
+    msg: "Downgrade detected. Downgrades are not supported."
+  when: _servarr_installation_stategy_downgrade
+  register: _exception

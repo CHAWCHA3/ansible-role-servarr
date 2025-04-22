@@ -1,0 +1,40 @@
+---
+- name: Ensure configuration directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ _instance_data_dir }}"
+    state: directory
+    owner: "{{ servarr_user }}"
+    group: "{{ servarr_group }}"
+    mode: "0750"
+
+- name: Check if configuration file already exists
+  become: true
+  ansible.builtin.stat:
+    path: "{{ _instance_data_dir }}/config.xml"
+  register: config_file
+
+- name: Create empty configuration if it doesn't exist
+  become: true
+  when: not config_file.stat.exists
+  ansible.builtin.copy:
+    dest: "{{ _instance_data_dir }}/config.xml"
+    content: "<Config><Port/><LaunchBrowser/><InstanceName/></Config>"
+    owner: "{{ servarr_user }}"
+    group: "{{ servarr_group }}"
+    mode: "0640"
+
+- name: Apply configuration values
+  community.general.xml:
+    path: "{{ _instance_data_dir }}/config.xml"
+    xpath: "/Config/{{ item.name }}"
+    value: "{{ item.value }}"
+    pretty_print: true
+  with_items:
+    - name: Port
+      value: "{{ servarr_instance_port | default(servarr_app_configurations[servarr_app].port) }}"
+    - name: LaunchBrowser
+      value: "false"
+    - name: InstanceName
+      value: "{{ servarr_instance_name }}"
+  notify: Restart servarr

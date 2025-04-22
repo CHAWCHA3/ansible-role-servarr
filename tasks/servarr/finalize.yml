@@ -1,0 +1,22 @@
+---
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Collect facts about system services
+  become: true
+  ansible.builtin.service_facts:
+  register: _service_state
+
+- name: Check that the service is running
+  ansible.builtin.assert:
+    that: _service_state.ansible_facts.services["{{ _instance_service_name }}.service"].state == "running"
+    fail_msg: "The {{ _instance_service_name }}.service is not running. Please check the logs for more information."
+
+- name: Create version info file with current version number
+  become: true
+  ansible.builtin.copy:
+    content: "{{ _servarr_version }}"
+    dest: "{{ _release_install_dir }}/.version"
+    owner: "{{ servarr_user }}"
+    group: "{{ servarr_group }}"
+    mode: "0644"

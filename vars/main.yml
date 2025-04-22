@@ -1,0 +1,42 @@
+---
+
+# Variables not intended to be changed by the user.
+servarr_supported_apps:
+  - "lidarr"
+  - "prowlarr"
+  - "readarr"
+  - "radarr"
+  - "sonarr"
+  - "whisparr"
+
+servarr_app_configurations:
+  lidarr:
+    port: 8686
+    dependencies: [curl, sqlite3, libchromaprint-tools, mediainfo]
+    branch: master
+    url: "https://lidarr.servarr.com/v1/update/$branch/updatefile?os=linux&runtime=netcore&arch=$arch&version=$version"
+  prowlarr:
+    port: 9696
+    dependencies: [curl, sqlite3]
+    branch: master
+    url: "https://prowlarr.servarr.com/v1/update/$branch/updatefile?os=linux&runtime=netcore&arch=$arch&version=$version"
+  radarr:
+    port: 7878
+    dependencies: [curl, sqlite3]
+    branch: master
+    url: "https://radarr.servarr.com/v1/update/$branch/updatefile?os=linux&runtime=netcore&arch=$arch&version=$version"
+  readarr:
+    port: 8787
+    dependencies: [curl, sqlite3]
+    branch: nightly
+    url: "https://readarr.servarr.com/v1/update/$branch/updatefile?os=linux&runtime=netcore&arch=$arch&version=$version"
+  sonarr:
+    port: 8989
+    dependencies: [curl, sqlite3, wget]
+    branch: main
+    url: "https://services.sonarr.tv/v1/download/$branch/latest?os=linux&arch=$arch&version=$version"
+  whisparr:
+    port: 6969
+    dependencies: [curl, sqlite3]
+    branch: nightly
+    url: "https://whisparr.servarr.com/v1/update/$branch/updatefile?os=linux&runtime=netcore&arch=$arch&version=$version"
